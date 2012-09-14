@@ -1,9 +1,9 @@
-========
-kafka.go
-========
+=========================
+github.com/jedsmith/kafka
+=========================
 
-Updated Go bindings for Kafka
-=============================
+Go bindings for Kafka
+=====================
 
 This is **kafka.go**, a repository containing Go_ bindings for the
 `Apache Kafka`_ pub/sub messaging system developed by LinkedIn. The bindings
@@ -30,7 +30,7 @@ The import path for kafka.go is **github.com/jedsmith/kafka**.
     ok     github.com/jedsmith/kafka      0.037s
 
 To play around with publishers and consumers, there are also example binaries.
-Assuming a running Kafka server on ``localhost:9092``:
+Assuming a running Kafka server on your local machine:
 
 .. code-block:: text
 
@@ -51,7 +51,11 @@ Assuming a running Kafka server on ``localhost:9092``:
 API Usage
 ---------
 
-**A refactor is coming for the API. Don't get too attached.**
+**A complete refactor is coming for the API. Don't get too attached!**
+
+Full documentation is available with godoc_, but some quick examples follow.
+
+.. _godoc: http://go.pkgdoc.org/github.com/jedsmith/kafka
 
 Publishing
 ~~~~~~~~~~
