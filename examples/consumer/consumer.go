@@ -37,12 +37,12 @@ of their respective owners.
 package main
 
 import (
-  "flag"
-  "fmt"
-  "os"
-  "os/signal"
-  "syscall"
-  "github.com/jedsmith/kafka"
+	"flag"
+	"fmt"
+	"github.com/jedsmith/kafka"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 var hostname string
@@ -55,73 +55,72 @@ var consumerForever bool
 var printmessage bool
 
 func init() {
-  flag.StringVar(&hostname, "hostname", "localhost:9092", "host:port string for the kafka server")
-  flag.StringVar(&topic, "topic", "test", "topic to publish to")
-  flag.IntVar(&partition, "partition", 0, "partition to publish to")
-  flag.Uint64Var(&offset, "offset", 0, "offset to start consuming from")
-  flag.UintVar(&maxSize, "maxsize", 1048576, "offset to start consuming from")
-  flag.StringVar(&writePayloadsTo, "writeto", "", "write payloads to this file")
-  flag.BoolVar(&consumerForever, "consumeforever", false, "loop forever consuming")
-  flag.BoolVar(&printmessage, "printmessage", true, "print the message details to stdout")
+	flag.StringVar(&hostname, "hostname", "localhost:9092", "host:port string for the kafka server")
+	flag.StringVar(&topic, "topic", "test", "topic to publish to")
+	flag.IntVar(&partition, "partition", 0, "partition to publish to")
+	flag.Uint64Var(&offset, "offset", 0, "offset to start consuming from")
+	flag.UintVar(&maxSize, "maxsize", 1048576, "offset to start consuming from")
+	flag.StringVar(&writePayloadsTo, "writeto", "", "write payloads to this file")
+	flag.BoolVar(&consumerForever, "consumeforever", false, "loop forever consuming")
+	flag.BoolVar(&printmessage, "printmessage", true, "print the message details to stdout")
 }
 
-
 func main() {
-  flag.Parse()
-  fmt.Println("Consuming Messages :")
-  fmt.Printf("From: %s, topic: %s, partition: %d\n", hostname, topic, partition)
-  fmt.Println(" ---------------------- ")
-  broker := kafka.NewBrokerConsumer(hostname, topic, partition, offset, uint32(maxSize))
+	flag.Parse()
+	fmt.Println("Consuming Messages :")
+	fmt.Printf("From: %s, topic: %s, partition: %d\n", hostname, topic, partition)
+	fmt.Println(" ---------------------- ")
+	broker := kafka.NewBrokerConsumer(hostname, topic, partition, offset, uint32(maxSize))
 
-  var payloadFile *os.File = nil
-  if len(writePayloadsTo) > 0 {
-    var err error
-    payloadFile, err = os.Create(writePayloadsTo)
-    if err != nil {
-      fmt.Println("Error opening file: ", err)
-      payloadFile = nil
-    }
-  }
+	var payloadFile *os.File = nil
+	if len(writePayloadsTo) > 0 {
+		var err error
+		payloadFile, err = os.Create(writePayloadsTo)
+		if err != nil {
+			fmt.Println("Error opening file: ", err)
+			payloadFile = nil
+		}
+	}
 
-  consumerCallback := func(msg *kafka.Message) {
-    if printmessage {
-      msg.Print()
-    }
-    if payloadFile != nil {
-      payloadFile.Write([]byte(fmt.Sprintf("Message at: %d\n", msg.Offset())))
-      payloadFile.Write(msg.Payload())
-      payloadFile.Write([]byte("\n-------------------------------\n"))
-    }
-  }
+	consumerCallback := func(msg *kafka.Message) {
+		if printmessage {
+			msg.Print()
+		}
+		if payloadFile != nil {
+			payloadFile.Write([]byte(fmt.Sprintf("Message at: %d\n", msg.Offset())))
+			payloadFile.Write(msg.Payload())
+			payloadFile.Write([]byte("\n-------------------------------\n"))
+		}
+	}
 
-  if consumerForever {
-    quit := make(chan bool, 1)
-    go func() {
-	  sigChan := make(chan os.Signal)
-	  signal.Notify(sigChan)
-      for {
-        sig := <-sigChan
-        if sig == syscall.SIGINT {
-          quit <- true
-        }
-      }
-    }()
+	if consumerForever {
+		quit := make(chan bool, 1)
+		go func() {
+			sigChan := make(chan os.Signal)
+			signal.Notify(sigChan)
+			for {
+				sig := <-sigChan
+				if sig == syscall.SIGINT {
+					quit <- true
+				}
+			}
+		}()
 
-    msgChan := make(chan *kafka.Message)
-    go broker.ConsumeOnChannel(msgChan, 10, quit)
-    for msg := range msgChan {
-      if msg != nil {
-        consumerCallback(msg)
-      } else {
-        break
-      }
-    }
-  } else {
-    broker.Consume(consumerCallback)
-  }
+		msgChan := make(chan *kafka.Message)
+		go broker.ConsumeOnChannel(msgChan, 10, quit)
+		for msg := range msgChan {
+			if msg != nil {
+				consumerCallback(msg)
+			} else {
+				break
+			}
+		}
+	} else {
+		broker.Consume(consumerCallback)
+	}
 
-  if payloadFile != nil {
-    payloadFile.Close()
-  }
+	if payloadFile != nil {
+		payloadFile.Close()
+	}
 
 }
