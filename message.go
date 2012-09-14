@@ -9,84 +9,83 @@
 package kafka
 
 import (
-  "hash/crc32"
-  "encoding/binary"
-  "bytes"
-  "log"
+	"bytes"
+	"encoding/binary"
+	"hash/crc32"
+	"log"
 )
 
-
 type Message struct {
-  magic       byte
-  checksum    [4]byte
-  payload     []byte
-  offset      uint64 // only used after decoding
-  totalLength uint32 // total length of the message (decoding)
+	magic       byte
+	checksum    [4]byte
+	payload     []byte
+	offset      uint64 // only used after decoding
+	totalLength uint32 // total length of the message (decoding)
 }
 
 func (m *Message) Offset() uint64 {
-  return m.offset
+	return m.offset
 }
 
 func (m *Message) Payload() []byte {
-  return m.payload
+	return m.payload
 }
 
 func (m *Message) PayloadString() string {
-  return string(m.payload)
+	return string(m.payload)
 }
 
 func NewMessage(payload []byte) *Message {
-  message := &Message{}
-  message.magic = byte(MAGIC_DEFAULT)
-  binary.BigEndian.PutUint32(message.checksum[0:], crc32.ChecksumIEEE(payload))
-  message.payload = payload
-  return message
+	message := &Message{}
+	message.magic = byte(MAGIC_DEFAULT)
+	binary.BigEndian.PutUint32(message.checksum[0:], crc32.ChecksumIEEE(payload))
+	message.payload = payload
+	return message
 }
 
 // MESSAGE SET: <MESSAGE LENGTH: uint32><MAGIC: 1 byte><CHECKSUM: uint32><MESSAGE PAYLOAD: bytes>
 func (m *Message) Encode() []byte {
-  msgLen := 1 + 4 + len(m.payload)
-  msg := make([]byte, 4+msgLen)
-  binary.BigEndian.PutUint32(msg[0:], uint32(msgLen))
-  msg[4] = m.magic
-  copy(msg[5:], m.checksum[0:])
-  copy(msg[9:], m.payload)
-  return msg
+	msgLen := 1 + 4 + len(m.payload)
+	msg := make([]byte, 4+msgLen)
+	binary.BigEndian.PutUint32(msg[0:], uint32(msgLen))
+	msg[4] = m.magic
+	copy(msg[5:], m.checksum[0:])
+	copy(msg[9:], m.payload)
+	return msg
 }
 
 func Decode(packet []byte) *Message {
-  length := binary.BigEndian.Uint32(packet[0:])
-  if length > uint32(len(packet[4:])) {
-    log.Printf("length mismatch, expected at least: %X, was: %X\n", length, len(packet[4:]))
-    return nil
-  }
-  msg := Message{}
-  msg.totalLength = length
-  msg.magic = packet[4]
-  copy(msg.checksum[:], packet[5:9])
-  payloadLength := length - 1 - 4
-  msg.payload = packet[9 : 9+payloadLength]
+	length := binary.BigEndian.Uint32(packet[0:])
+	if length > uint32(len(packet[4:])) {
+		log.Printf("length mismatch, expected at least: %X, was: %X\n", length, len(packet[4:]))
+		return nil
+	}
+	msg := Message{}
+	msg.totalLength = length
+	msg.magic = packet[4]
+	copy(msg.checksum[:], packet[5:9])
+	payloadLength := length - 1 - 4
+	msg.payload = packet[9 : 9+payloadLength]
 
-  payloadChecksum := make([]byte, 4)
-  binary.BigEndian.PutUint32(payloadChecksum, crc32.ChecksumIEEE(msg.payload))
-  if !bytes.Equal(payloadChecksum, msg.checksum[:]) {
-    log.Printf("checksum mismatch, expected: %X was: %X\n", payloadChecksum, msg.checksum[:])
-    return nil
-  }
-  return &msg
+	payloadChecksum := make([]byte, 4)
+	binary.BigEndian.PutUint32(payloadChecksum, crc32.ChecksumIEEE(msg.payload))
+	if !bytes.Equal(payloadChecksum, msg.checksum[:]) {
+		log.Printf("checksum mismatch, expected: %X was: %X\n", payloadChecksum, msg.checksum[:])
+		return nil
+	}
+	return &msg
 }
 
 func (msg *Message) Print() {
-  log.Println("----- Begin Message ------")
-  log.Printf("magic: %X\n", msg.magic)
-  log.Printf("checksum: %X\n", msg.checksum)
-  if len(msg.payload) < 1048576 { // 1 MB 
-    log.Printf("payload: %X\n", msg.payload)
-    log.Printf("payload(string): %s\n", msg.PayloadString())
-  } else {
-    log.Printf("long payload, length: %d\n", len(msg.payload))
-  }
-  log.Printf("offset: %d\n", msg.offset)
-  log.Println("----- End Message ------")
+	log.Println("----- Begin Message ------")
+	log.Printf("magic: %X\n", msg.magic)
+	log.Printf("checksum: %X\n", msg.checksum)
+	if len(msg.payload) < 1048576 { // 1 MB 
+		log.Printf("payload: %X\n", msg.payload)
+		log.Printf("payload(string): %s\n", msg.PayloadString())
+	} else {
+		log.Printf("long payload, length: %d\n", len(msg.payload))
+	}
+	log.Printf("offset: %d\n", msg.offset)
+	log.Println("----- End Message ------")
 }

@@ -9,36 +9,34 @@
 package kafka
 
 import (
-  "container/list"
+	"container/list"
 )
 
-
 type BrokerPublisher struct {
-  broker *Broker
+	broker *Broker
 }
 
 func NewBrokerPublisher(hostname string, topic string, partition int) *BrokerPublisher {
-  return &BrokerPublisher{broker: newBroker(hostname, topic, partition)}
+	return &BrokerPublisher{broker: newBroker(hostname, topic, partition)}
 }
 
-
 func (b *BrokerPublisher) Publish(message *Message) (int, error) {
-  messages := list.New()
-  messages.PushBack(message)
-  return b.BatchPublish(messages)
+	messages := list.New()
+	messages.PushBack(message)
+	return b.BatchPublish(messages)
 }
 
 func (b *BrokerPublisher) BatchPublish(messages *list.List) (int, error) {
-  conn, err := b.broker.connect()
-  if err != nil {
-    return -1, err
-  }
-  defer conn.Close()
-  // TODO: MULTIPRODUCE
-  num, err := conn.Write(b.broker.EncodePublishRequest(messages))
-  if err != nil {
-    return -1, err
-  }
+	conn, err := b.broker.connect()
+	if err != nil {
+		return -1, err
+	}
+	defer conn.Close()
+	// TODO: MULTIPRODUCE
+	num, err := conn.Write(b.broker.EncodePublishRequest(messages))
+	if err != nil {
+		return -1, err
+	}
 
-  return num, err
+	return num, err
 }
