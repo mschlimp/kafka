@@ -14,7 +14,7 @@ import (
   "os"
   "os/signal"
   "syscall"
-  "github.com/jedsmith/kafka.go/kafka"
+  "github.com/jedsmith/kafka"
 )
 
 var hostname string

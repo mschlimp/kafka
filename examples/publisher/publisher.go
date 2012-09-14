@@ -12,7 +12,7 @@ import (
   "flag"
   "fmt"
   "os"
-  "github.com/jedsmith/kafka.go/kafka"
+  "github.com/jedsmith/kafka"
 )
 
 var hostname string

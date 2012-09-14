@@ -11,7 +11,7 @@ package main
 import (
   "flag"
   "fmt"
-  "github.com/jedsmith/kafka.go/kafka"
+  "github.com/jedsmith/kafka"
 )
 
 var hostname string
