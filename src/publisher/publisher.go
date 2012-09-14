@@ -47,7 +47,7 @@ func main() {
       fmt.Println("Error: ", err)
       return
     }
-    payload := make([]byte, stat.Size)
+    payload := make([]byte, stat.Size())
     file.Read(payload)
     timing := kafka.StartTiming("Sending")
     broker.Publish(kafka.NewMessage(payload))

@@ -10,7 +10,6 @@ package kafka
 
 import (
   "container/list"
-  "os"
 )
 
 
@@ -23,13 +22,13 @@ func NewBrokerPublisher(hostname string, topic string, partition int) *BrokerPub
 }
 
 
-func (b *BrokerPublisher) Publish(message *Message) (int, os.Error) {
+func (b *BrokerPublisher) Publish(message *Message) (int, error) {
   messages := list.New()
   messages.PushBack(message)
   return b.BatchPublish(messages)
 }
 
-func (b *BrokerPublisher) BatchPublish(messages *list.List) (int, os.Error) {
+func (b *BrokerPublisher) BatchPublish(messages *list.List) (int, error) {
   conn, err := b.broker.connect()
   if err != nil {
     return -1, err

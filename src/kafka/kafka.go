@@ -9,12 +9,11 @@
 package kafka
 
 import (
+  "errors"
   "log"
   "net"
-  "os"
   "fmt"
   "encoding/binary"
-  "strconv"
   "io"
   "bufio"
 )
@@ -38,7 +37,7 @@ func newBroker(hostname string, topic string, partition int) *Broker {
 }
 
 
-func (b *Broker) connect() (conn *net.TCPConn, error os.Error) {
+func (b *Broker) connect() (conn *net.TCPConn, err error) {
   raddr, err := net.ResolveTCPAddr(NETWORK, b.hostname)
   if err != nil {
     log.Println("Fatal Error: ", err)
@@ -49,11 +48,11 @@ func (b *Broker) connect() (conn *net.TCPConn, error os.Error) {
     log.Println("Fatal Error: ", err)
     return nil, err
   }
-  return conn, error
+  return conn, err
 }
 
 // returns length of response & payload & err
-func (b *Broker) readResponse(conn *net.TCPConn) (uint32, []byte, os.Error) {
+func (b *Broker) readResponse(conn *net.TCPConn) (uint32, []byte, error) {
   reader := bufio.NewReader(conn)
   length := make([]byte, 4)
   lenRead, err := io.ReadFull(reader, length)
@@ -61,7 +60,7 @@ func (b *Broker) readResponse(conn *net.TCPConn) (uint32, []byte, os.Error) {
     return 0, []byte{}, err
   }
   if lenRead != 4 || lenRead < 0 {
-    return 0, []byte{}, os.NewError("invalid length of the packet length field")
+    return 0, []byte{}, errors.New("invalid length of the packet length field")
   }
 
   expectedLength := binary.BigEndian.Uint32(length)
@@ -72,12 +71,12 @@ func (b *Broker) readResponse(conn *net.TCPConn) (uint32, []byte, os.Error) {
   }
 
   if uint32(lenRead) != expectedLength {
-    return 0, []byte{}, os.NewError(fmt.Sprintf("Fatal Error: Unexpected Length: %d  expected:  %d", lenRead, expectedLength))
+    return 0, []byte{}, errors.New(fmt.Sprintf("Fatal Error: Unexpected Length: %d  expected:  %d", lenRead, expectedLength))
   }
 
   errorCode := binary.BigEndian.Uint16(messages[0:2])
   if errorCode != 0 {
-    return 0, []byte{}, os.NewError(strconv.Uitoa(uint(errorCode)))
+    return 0, []byte{}, errors.New(fmt.Sprintf("error %d", errorCode))
   }
   return expectedLength, messages[2:], nil
 }

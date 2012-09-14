@@ -20,16 +20,16 @@ type Timing struct {
 }
 
 func StartTiming(label string) *Timing {
-  return &Timing{label: label, start: time.Nanoseconds(), stop: 0}
+  return &Timing{label: label, start: time.Now().UnixNano(), stop: 0}
 }
 
 func (t *Timing) Stop() {
-  t.stop = time.Nanoseconds()
+  t.stop = time.Now().UnixNano()
 }
 
 func (t *Timing) Print() {
   if t.stop == 0 {
     t.Stop()
   }
-  log.Printf("%s took: %f ms\n", t.label, float64((time.Nanoseconds()-t.start))/1000000)
+  log.Printf("%s took: %f ms\n", t.label, float64((time.Now().UnixNano()-t.start))/1000000)
 }

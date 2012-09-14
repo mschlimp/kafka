@@ -13,7 +13,6 @@ import (
   "flag"
   "fmt"
   "os"
-  "strconv"
   "os/signal"
   "syscall"
 )
@@ -48,7 +47,7 @@ func main() {
 
   var payloadFile *os.File = nil
   if len(writePayloadsTo) > 0 {
-    var err os.Error
+    var err error
     payloadFile, err = os.Create(writePayloadsTo)
     if err != nil {
       fmt.Println("Error opening file: ", err)
@@ -61,7 +60,7 @@ func main() {
       msg.Print()
     }
     if payloadFile != nil {
-      payloadFile.Write([]byte("Message at: " + strconv.Uitoa64(msg.Offset()) + "\n"))
+      payloadFile.Write([]byte(fmt.Sprintf("Message at: %d\n", msg.Offset())))
       payloadFile.Write(msg.Payload())
       payloadFile.Write([]byte("\n-------------------------------\n"))
     }
@@ -70,9 +69,11 @@ func main() {
   if consumerForever {
     quit := make(chan bool, 1)
     go func() {
+	  sigChan := make(chan os.Signal)
+	  signal.Notify(sigChan)
       for {
-        sig := <-signal.Incoming
-        if sig.(signal.UnixSignal) == syscall.SIGINT {
+        sig := <-sigChan
+        if sig == syscall.SIGINT {
           quit <- true
         }
       }
