@@ -9,12 +9,12 @@
 package main
 
 import (
-  "kafka"
   "flag"
   "fmt"
   "os"
   "os/signal"
   "syscall"
+  "github.com/jedsmith/kafka.go/kafka"
 )
 
 var hostname string
