@@ -16,6 +16,7 @@ instead of issuing a pull request and disrupting that codebase.
 .. _`Apache Kafka`: http://incubator.apache.org/kafka/
 .. _`@jdamick`: https://github.com/jdamick/kafka.go
 
+The original documentation, mostly, follows.
 
 Getting Started
 ---------------
@@ -51,12 +52,6 @@ Assuming a running Kafka server on your local machine:
 API Usage
 ---------
 
-**A complete refactor is coming for the API. Don't get too attached!**
-
-Full documentation is available with godoc_, but some quick examples follow.
-
-.. _godoc: http://go.pkgdoc.org/github.com/jedsmith/kafka
-
 Publishing
 ~~~~~~~~~~
 
@@ -87,13 +82,6 @@ Consuming Offsets
 
     broker := kafka.NewBrokerOffsetConsumer("localhost:9092", "mytesttopic", 0)
     offsets, err := broker.GetOffsets(-1, 1)
-
-TODO
-----
-
-- Documentation cleanup to godoc standards.
-- Code cleanup and optimization.
-- Optional Zookeeper integration.
 
 License
 -------
