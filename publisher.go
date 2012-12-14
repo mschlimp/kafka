@@ -38,14 +38,25 @@ package kafka
 
 import (
 	"container/list"
+	"net"
+	"fmt"
 )
+
+var Conn *net.TCPConn
 
 type BrokerPublisher struct {
 	broker *Broker
 }
 
 func NewBrokerPublisher(hostname string, topic string, partition int) *BrokerPublisher {
-	return &BrokerPublisher{broker: newBroker(hostname, topic, partition)}
+	b := BrokerPublisher{broker: newBroker(hostname, topic, partition)}
+	conn, err := b.broker.connect()
+	if err != nil {
+	        fmt.Println("Error: ",err)
+		return nil
+	}
+	Conn = conn
+	return &b
 }
 
 func (b *BrokerPublisher) Publish(message *Message) (int, error) {
@@ -55,13 +66,9 @@ func (b *BrokerPublisher) Publish(message *Message) (int, error) {
 }
 
 func (b *BrokerPublisher) BatchPublish(messages *list.List) (int, error) {
-	conn, err := b.broker.connect()
-	if err != nil {
-		return -1, err
-	}
-	defer conn.Close()
+	
 	// TODO: MULTIPRODUCE
-	num, err := conn.Write(b.broker.EncodePublishRequest(messages))
+	num, err := Conn.Write(b.broker.EncodePublishRequest(messages))
 	if err != nil {
 		return -1, err
 	}
